@@ -266,6 +266,8 @@ static llama_model * llama_model_mapping(llm_arch arch, const llama_model_params
             return new llama_model_bailingmoe2(params);
         case LLM_ARCH_BAILINGMOE3:
             return new llama_model_bailingmoe3(params);
+        case LLM_ARCH_BAILINGMOE3VL:
+            return new llama_model_bailingmoe3vl(params);
         case LLM_ARCH_SEED_OSS:
             return new llama_model_seed_oss(params);
         case LLM_ARCH_DOTS1:
@@ -2931,6 +2933,8 @@ llama_rope_type llama_model_rope_type(const llama_model * model) {
         case LLM_ARCH_CHAMELEON:
         case LLM_ARCH_BAILINGMOE:
         case LLM_ARCH_BAILINGMOE3:
+        case LLM_ARCH_BAILINGMOE3VL:
+            return model->hparams.use_mrope() ? LLAMA_ROPE_TYPE_MROPE : LLAMA_ROPE_TYPE_NORM;
         case LLM_ARCH_NEO_BERT:
         case LLM_ARCH_SMOLLM3:
         case LLM_ARCH_ARCEE:

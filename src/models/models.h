@@ -1870,6 +1870,13 @@ struct llama_model_bailingmoe3 : public llama_model_base {
 };
 
 
+// Ling 3.0 VL: identical text model to BailingMoeV3 plus vision M-RoPE sections
+struct llama_model_bailingmoe3vl : public llama_model_bailingmoe3 {
+    llama_model_bailingmoe3vl(const struct llama_model_params & params) : llama_model_bailingmoe3(params) {}
+    void load_arch_hparams(llama_model_loader & ml) override;
+};
+
+
 struct llama_model_seed_oss : public llama_model_base {
     llama_model_seed_oss(const struct llama_model_params & params) : llama_model_base(params) {}
     void load_arch_hparams(llama_model_loader & ml) override;

@@ -50,6 +50,13 @@ struct clip_graph_qwen3vl : clip_graph_qwen2vl {
     ggml_cgraph * build() override;
 };
 
+// Ling 3.0 VL: qwen3vl-style ViT without patch bias, norm-only merger,
+// and the projection MLP outside the vision tower (linear_proj)
+struct clip_graph_ling3vl : clip_graph_qwen3vl {
+    clip_graph_ling3vl(clip_ctx * ctx, const clip_image_f32 & img) : clip_graph_qwen3vl(ctx, img) {}
+    ggml_cgraph * build() override;
+};
+
 struct clip_graph_minimax_m3 : clip_graph {
     clip_graph_minimax_m3(clip_ctx * ctx, const clip_image_f32 & img) : clip_graph(ctx, img) {}
     ggml_cgraph * build() override;
