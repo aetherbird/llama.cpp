@@ -43,6 +43,35 @@ class BailingMoeV3Model(TextModel):
         layer_group_size = self.hparams["layer_group_size"]
         return bid >= n_layer or (bid + 1) % layer_group_size == 0 or bid >= n_layer // layer_group_size * layer_group_size
 
+    def dequant_model(self):
+        quant_cfg = self.hparams.get("quantization_config")
+        if not quant_cfg or quant_cfg.get("quant_method") != "fp8":
+            return
+        fp8_dtypes = tuple(d for d in (getattr(torch, "float8_e4m3fn", None), getattr(torch, "float8_e5m2", None)) if d is not None)
+
+        def dequant_fp8_weight(weight, scale):
+            out_f, in_f = weight.shape
+            s = scale.float()
+            s = s.repeat_interleave(128, 0)[:out_f]
+            s = s.repeat_interleave(128, 1)[:, :in_f]
+            return weight.float() * s
+
+        removed = []
+        for name in list(self.model_tensors):
+            if not name.endswith(".weight_scale_inv"):
+                continue
+            weight_name = name[: -len(".weight_scale_inv")] + ".weight"
+            if weight_name not in self.model_tensors:
+                continue
+            weight = self.model_tensors[weight_name]
+            if weight().dtype not in fp8_dtypes or weight().ndim != 2:
+                continue
+            scale = self.model_tensors[name]
+            self.model_tensors[weight_name] = lambda w=weight, s=scale: dequant_fp8_weight(w(), s())
+            removed.append(name)
+        for name in removed:
+            del self.model_tensors[name]
+
     def set_gguf_parameters(self):
         if not self.hparams.get("no_kda_lora", False):
             raise ValueError("BailingMoeV3 KDA LoRA projections are not supported")
